@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    # depends_on:
+    #   - backend
+    environment:
+      - NODE_ENV=production
+
+  # backend:
+  #   build: ./backend
+  #   ports:
+  #     - "8080:8080"
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - mongo
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=dev
+  #     - SPRING_DATA_MONGODB_URI=mongodb://admin:admin123@mongo:27017/projectdb
+
+  # mongo:
+  #   image: mongo
+  #   ports:
+  #     - "27017:27017"
+  #   restart: unless-stopped
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: admin
+  #     MONGO_INITDB_ROOT_PASSWORD: admin123
