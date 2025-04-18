@@ -30,3 +30,46 @@ services:
   #   environment:
   #     MONGO_INITDB_ROOT_USERNAME: admin
   #     MONGO_INITDB_ROOT_PASSWORD: admin123
+
+  # PostgreSQL database setup
+  db:
+    image: postgres:13
+    container_name: pms-db
+    environment:
+      POSTGRES_DB: pms
+      POSTGRES_USER: pms
+      POSTGRES_PASSWORD: pms
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh  # Script to create DB, user, tables
+    ports:
+      - "5432:5432"
+    networks:
+      - pms-network
+
+  # Backend Spring Boot application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pms-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pms  # Connect to the db service in Docker Compose
+      SPRING_DATASOURCE_USERNAME: pms
+      SPRING_DATASOURCE_PASSWORD: pms
+      SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    networks:
+      - pms-network
+
+networks:
+  pms-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
