@@ -38,7 +38,8 @@ services:
       SPRING_DATASOURCE_USERNAME: pms
       SPRING_DATASOURCE_PASSWORD: pms
       SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
-      SPRING_PROFILES_ACTIVE: docker
+      TOKEN_SECRET: aHJtc1NwYXJpdHk=
+      TOKEN_EXPIRE: 86400
     depends_on:
       - db
     ports:
