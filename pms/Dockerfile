@@ -1,22 +1,28 @@
-# Use OpenJDK 17 as the base image (suitable for Java 17 apps)
-FROM openjdk:17-jdk-slim AS build
+FROM openjdk:17-jdk-slim
 
-# Set working directory inside the container
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml to avoid downloading dependencies repeatedly
+# Copy Maven wrapper and project files
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
-# Install Maven and build the application
-RUN ./mvnw clean install -DskipTests
+# Convert line endings (if downloaded from Windows) and make mvnw executable
+RUN apt-get update && apt-get install -y dos2unix \
+    && dos2unix mvnw \
+    && chmod +x mvnw
 
-# Copy the compiled JAR file from the target folder
-COPY target/pms-0.0.1-SNAPSHOT.jar pms.jar
+# Copy source code AFTER dependencies are cached
+COPY src ./src
 
-# Expose the port for the Spring Boot app (default is 8080)
+# Build the Spring Boot JAR using the Maven wrapper
+RUN ./mvnw clean package -DskipTests
+
+# Copy the generated JAR to a standard filename
+RUN cp target/*.jar app.jar
+
+# Expose the port used by Spring Boot
 EXPOSE 8080
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "/app/pms.jar"]
+# Start the Spring Boot application
+ENTRYPOINT ["java", "-jar", "app.jar"]

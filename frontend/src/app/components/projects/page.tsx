@@ -84,7 +84,7 @@ export default function ProjectScreen() {
                 </p>
                 <p className="text-sm text-gray-600">{project.description}</p>
                 <p className="text-sm text-gray-400">
-                  👥 {project.peopleCount} {project.peopleCount === 1 ? 'person' : 'people'}
+                {project.peopleCount} {project.peopleCount === 1 ? 'person' : 'people'}
                 </p>
               </div>
             </div>

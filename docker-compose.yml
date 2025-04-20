@@ -11,26 +11,6 @@ services:
     environment:
       - NODE_ENV=production
 
-  # backend:
-  #   build: ./backend
-  #   ports:
-  #     - "8080:8080"
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - mongo
-  #   environment:
-  #     - SPRING_PROFILES_ACTIVE=dev
-  #     - SPRING_DATA_MONGODB_URI=mongodb://admin:admin123@mongo:27017/projectdb
-
-  # mongo:
-  #   image: mongo
-  #   ports:
-  #     - "27017:27017"
-  #   restart: unless-stopped
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: admin
-  #     MONGO_INITDB_ROOT_PASSWORD: admin123
-
   # PostgreSQL database setup
   db:
     image: postgres:13
@@ -50,7 +30,7 @@ services:
   # Backend Spring Boot application
   app:
     build:
-      context: .
+      context: ./pms
       dockerfile: Dockerfile
     container_name: pms-app
     environment:

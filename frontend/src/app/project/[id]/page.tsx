@@ -21,12 +21,13 @@ type Task = {
   assignedTo: string;
   status: 'todo' | 'inprogress' | 'completed';
   deadline: string;  // Added deadline to task
+  description: string;
 };
 
 const initialTasks: Task[] = [
-  { id: 1, title: 'Wireframes', assignedTo: 'User 1', status: 'todo', deadline: '2024-02-01' },
-  { id: 2, title: 'Design UI', assignedTo: 'User 2', status: 'inprogress', deadline: '2024-03-01' },
-  { id: 3, title: 'Review UX', assignedTo: 'User 3', status: 'completed', deadline: '2024-04-01' },
+  { id: 1, title: 'Wireframes', assignedTo: 'User 1', status: 'todo', deadline: '2024-02-01', description: "something here" },
+  { id: 2, title: 'Design UI', assignedTo: 'User 2', status: 'inprogress', deadline: '2024-03-01', description: "something here" },
+  { id: 3, title: 'Review UX', assignedTo: 'User 3', status: 'completed', deadline: '2024-04-01', description: "something here" },
 ];
 
 export default function ProjectPage() {
@@ -50,6 +51,7 @@ export default function ProjectPage() {
       assignedTo,
       status: 'todo',
       deadline: taskDeadline,
+      description: "something here"
     };
     setTasks((prev) => [...prev, newTaskObj]);
     setNewTask('');
