@@ -11,7 +11,7 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         // Basic example: show error if password too short
@@ -25,11 +25,32 @@ export default function LoginPage() {
             return;
         }
 
-        localStorage.setItem('authToken', 'exampleToken');
-        toast.success('Logging in...');
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1000);
+        try{
+            const response = await fetch(`http://localhost:5000/api/login`,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "email": email,
+                    "password": password
+                  })
+            })
+
+            const data = await response.json();
+            if(!response.ok){
+                throw new Error(data.message || 'Login Failed');
+            }
+            localStorage.setItem('user', JSON.stringify(data.user));
+            toast.success('Logging in...');
+            setTimeout(() => {
+            router.push('/dashboard');
+            }, 1000);
+        }catch(err: any){
+            toast.error(err.message)
+        }
+
+        
         
     };
 

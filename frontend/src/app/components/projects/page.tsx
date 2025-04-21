@@ -1,59 +1,56 @@
 'use client';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
 type Project = {
-  id: number;
-  name: string;
+  _id: string;
+  title: string;
   description: string;
   startDate: string;
   endDate: string;
-  peopleCount: number;
+  people: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  }[];
 };
-
-// Tailwind color classes
-const colorVariants = [
-  'bg-red-500',
-  'bg-blue-500',
-  'bg-green-500',
-  'bg-yellow-500',
-  'bg-purple-500',
-  'bg-pink-500',
-  'bg-orange-500',
-  'bg-teal-500',
-  'bg-rose-500',
-  'bg-indigo-500',
-];
-
-// Generate 100 mock projects
-const allProjects: Project[] = Array.from({ length: 100 }).map((_, i) => ({
-  id: i + 1,
-  name: `Project ${i + 1}`,
-  description: `This is a description for project ${i + 1}. It focuses on UI/UX improvements and backend integration.`,
-  startDate: '2024-01-01',
-  endDate: '2024-12-31',
-  peopleCount: (i % 5) + 1,
-}));
 
 export default function ProjectScreen() {
   const router = useRouter();
-  const [visibleCount, setVisibleCount] = useState(20);
-  const visibleProjects = allProjects.slice(0, visibleCount);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 20;
 
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + 20);
-  };
+  useEffect(() => {
+    fetchProjects(page);
+  }, [page]);
 
-  // Random color selector (consistent but random-looking)
-  const getRandomColorClass = (index: number) => {
-    return colorVariants[index % colorVariants.length];
+  const fetchProjects = async (page: number) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/projects?page=${page}&limit=20`);
+      const data = await res.json();
+      if (res.ok) {
+        setProjects((prev) => {
+          const updated = [...prev, ...data.projects];
+          if (updated.length >= data.total) setHasMore(false);
+          return updated;
+        });
+      }
+      else {
+        toast.error(data.message || 'Failed to fetch projects');
+      }
+    } catch (err) {
+      toast.error('Server error');
+    }
   };
+  
 
   return (
     <div className="space-y-8">
-      {/* Header + Create */}
+      {/* Header + Create Button */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-800">Projects</h1>
         <button
@@ -64,40 +61,31 @@ export default function ProjectScreen() {
         </button>
       </div>
 
-      {/* Scrollable grid of project cards */}
-      <div className="max-h-[500px] overflow-y-auto pr-1">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {visibleProjects.map((project, index) => (
-            <div
-              key={project.id}
-              className="flex rounded-xl shadow overflow-hidden bg-white cursor-pointer hover:shadow-lg transition"
-              onClick={() => router.push(`/project/${project.id}`)}
-            >
-              <div className={`w-[10px] ${getRandomColorClass(index)}`} />
-              <div className="p-6 space-y-2 w-full">
-                <h3 className="text-lg font-semibold text-gray-800">{project.name}</h3>
-                <p className="text-sm text-gray-500">
-                  <strong>Start:</strong> {project.startDate}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <strong>End:</strong> {project.endDate}
-                </p>
-                <p className="text-sm text-gray-600">{project.description}</p>
-                <p className="text-sm text-gray-400">
-                {project.peopleCount} {project.peopleCount === 1 ? 'person' : 'people'}
-                </p>
-              </div>
+      {/* Projects Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projects.map((project, index) => (
+          <div
+            key={project._id}
+            onClick={() => router.push(`/project/${project._id}`)}
+            className="flex rounded-xl shadow overflow-hidden bg-white cursor-pointer hover:shadow-lg transition"
+          >
+            <div className={`w-[10px] bg-indigo-500`} />
+            <div className="p-6 space-y-2 w-full">
+              <h3 className="text-lg font-semibold text-gray-800">{project.title}</h3>
+              <p className="text-sm text-gray-500"><strong>Start:</strong> {project.startDate}</p>
+              <p className="text-sm text-gray-500"><strong>End:</strong> {project.endDate}</p>
+              <p className="text-sm text-gray-600">{project.description}</p>
+              <p className="text-sm text-gray-400">{project.people?.length || 0} {project.people?.length === 1 ? 'person' : 'people'}</p>
             </div>
-          ))}
-
-        </div>
+          </div>
+        ))}
       </div>
 
-      {/* Load More */}
-      {visibleProjects.length < allProjects.length && (
+      {/* Load More Button */}
+      {hasMore && (
         <div className="text-center">
           <button
-            onClick={handleLoadMore}
+            onClick={() => setPage((prev) => prev + 1)}
             className="text-indigo-600 hover:underline text-sm"
           >
             Load More
