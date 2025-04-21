@@ -6,43 +6,33 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
-    # depends_on:
-    #   - backend
+    depends_on:
+      - backend
     environment:
       - NODE_ENV=production
 
-  # PostgreSQL database setup
-  db:
-    image: postgres:13
-    container_name: pms-db
-    environment:
-      POSTGRES_DB: pms
-      POSTGRES_USER: pms
-      POSTGRES_PASSWORD: pms
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh  # Script to create DB, user, tables
+  backend:
+    build: ./backend
+    container_name: pms-backend
+    restart: always
     ports:
-      - "5432:5432"
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/project-management
+    depends_on:
+      - mongo
     networks:
       - pms-network
 
-  # Backend Spring Boot application
-  app:
-    build:
-      context: ./pms
-      dockerfile: Dockerfile
-    container_name: pms-app
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pms  # Connect to the db service in Docker Compose
-      SPRING_DATASOURCE_USERNAME: pms
-      SPRING_DATASOURCE_PASSWORD: pms
-      SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - db
+  mongo:
+    image: mongo:6
+    container_name: pms-db
+    restart: always
     ports:
-      - "8080:8080"
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
     networks:
       - pms-network
 
@@ -51,5 +41,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres-data:
-    driver: local
+  mongo-data:

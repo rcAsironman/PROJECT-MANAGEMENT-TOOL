@@ -1,64 +1,141 @@
 'use client';
-
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-export default function ForgotPasswordPage() {
+export default function ForgotPassword() {
+  const router = useRouter();
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendOtp = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
 
-    if (!email.includes('@')) {
-      toast.error('Please enter a valid email address');
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        setStep(2);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      toast.error('Failed to send OTP');
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const res = await fetch('http://localhost:5000/api/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      toast.success('OTP verified');
+      setStep(3);
+    } else {
+      toast.error(data.message);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if(newPassword.length < 6){
+      toast.error('password length must be above 6 characters length');
       return;
     }
 
-    // Simulate success
-    toast.success('Password reset link sent!');
-    console.log('Reset link sent to:', email);
+    const res = await fetch('http://localhost:5000/api/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, newPassword }),
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      toast.success('Password updated successfully!');
+      router.push('/login');
+    } else {
+      toast.error(data.message);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
-        <div className="text-center mb-6">
-          <h2 className="text-3xl font-semibold text-gray-900">Forgot Password</h2>
-          <p className="text-sm text-gray-500 mt-2">
-            Enter your email to receive a reset link
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email address
-            </label>
+        <h2 className="text-2xl font-bold text-center mb-6">Forgot Password</h2>
+
+        {step === 1 && (
+          <>
             <input
               type="email"
-              id="email"
-              required
+              className="w-full mb-4 px-4 py-2 border rounded text-black"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm text-black focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              placeholder="you@example.com"
             />
-          </div>
+            <button
+              className="w-full bg-indigo-600 text-white py-2 rounded-lg"
+              onClick={handleSendOtp}
+            >
+              Send OTP
+            </button>
+          </>
+        )}
 
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-300"
-          >
-            Send Reset Link
-          </button>
+        {step === 2 && (
+          <>
+            <input
+              type="text"
+              className="w-full mb-4 px-4 py-2 border rounded text-black"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+            <button
+              className="w-full bg-indigo-600 text-white py-2 rounded-lg"
+              onClick={handleVerifyOtp}
+            >
+              Verify OTP
+            </button>
+          </>
+        )}
 
-          <p className="text-center text-sm text-gray-600 mt-4">
-            Remember your password?{' '}
-            <Link href="/login" className="text-indigo-600 hover:underline">
-              Back to Login
-            </Link>
-          </p>
-        </form>
+        {step === 3 && (
+          <>
+            <input
+              type="password"
+              className="w-full mb-4 px-4 py-2 border rounded text-black"
+              placeholder="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+            <input
+              type="password"
+              className="w-full mb-4 px-4 py-2 border rounded text-black"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            <button
+              className="w-full bg-indigo-600 text-white py-2 rounded-lg"
+              onClick={handleResetPassword}
+            >
+              Reset Password
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

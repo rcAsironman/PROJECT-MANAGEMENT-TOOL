@@ -47,21 +47,42 @@ export default function CreateProjectScreen() {
 
   const visibleFilteredUsers = filteredUsers.slice(0, visibleUserCount);
 
-  const handleSubmit = () => {
-    // For now, assuming the project gets an ID when it's created.
-    const newProjectId = Math.floor(Math.random() * 1000); // Generate a mock project ID
-    console.log({
+  const handleSubmit = async () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+  
+    const projectData = {
       title,
+      description,
       startDate,
       endDate,
-      description,
       people: selectedUsers,
-    });
-
-    toast.success('Project created successfully!');
-    // After creation, navigate back to the previous page.
-    router.back(); // Go back to the previous page
+      createdBy: {
+        name: user.name,
+        email: user.email
+      }
+    };
+  
+    try {
+      const res = await fetch('http://localhost:5000/api/projects/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(projectData),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        toast.success(data.message);
+        router.back();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      toast.error('Failed to create project');
+    }
   };
+  
+  
 
   return (
     <div className="min-h-screen w-full bg-white text-black p-8 space-y-8">

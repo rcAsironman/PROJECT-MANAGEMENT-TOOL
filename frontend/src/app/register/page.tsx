@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email.includes('@')) {
@@ -28,8 +30,29 @@ export default function RegisterPage() {
       return;
     }
 
+   try{
+    const response = await fetch(`http://localhost:5000/api/register`,{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: username,
+        email,
+        password
+      })
+    })
+    const data = await response.json();
+    if(!response.ok){
+      throw new Error(data.message || 'Registration failed')
+    }
     toast.success('Account created successfully!');
-    console.log({ username, email, password });
+    router.push('/login');
+
+   }catch(err: any){
+    toast.error(err.message)
+   }
+
     // Later: send to backend
   };
 
