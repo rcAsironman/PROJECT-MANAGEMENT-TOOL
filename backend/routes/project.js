@@ -8,8 +8,12 @@ router.get('/', async (req, res) => {
   const limit = parseInt(req.query.limit) || 20;
 
   try {
-    const total = await Project.countDocuments();
-    const projects = await Project.find()
+    const search = req.query.search || '';
+    const query = {
+      title: { $regex: search, $options: 'i' }
+    };
+    const total = await Project.countDocuments(query);
+    const projects = await Project.find(query)
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ createdAt: -1 });
@@ -19,6 +23,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
 
 // POST: Create a new project
 router.post('/create', async (req, res) => {
@@ -40,6 +45,17 @@ router.post('/create', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+router.get('/stats/count', async (req, res) => {
+  try {
+    const total = await Project.countDocuments();
+    res.status(200).json({ total });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching project count' });
+  }
+});
+
+
 
 // GET: Get a project by ID
 router.get('/:id', async (req, res) => {
@@ -120,56 +136,53 @@ router.put('/:projectId/tasks/:taskId', async (req, res) => {
 });
 
 router.post('/:projectId/people', async (req, res) => {
-    const { projectId } = req.params;
-    const { person } = req.body; // person: { id, name, email, role }
-  
-    try {
-      const project = await Project.findById(projectId);
-      if (!project) return res.status(404).json({ message: 'Project not found' });
-  
-      project.people.push(person);
-      await project.save();
-  
-      res.status(200).json({ message: 'Person added', people: project.people });
-    } catch (err) {
-      res.status(500).json({ message: 'Server error', error: err.message });
-    }
-  });
-  router.delete('/:projectId/people/:personId', async (req, res) => {
-    const { projectId, personId } = req.params;
-  
-    try {
-      const project = await Project.findById(projectId);
-      if (!project) return res.status(404).json({ message: 'Project not found' });
-  
-      project.people = project.people.filter(p => p.id !== parseInt(personId));
-      await project.save();
-  
-      res.status(200).json({ message: 'Person removed', people: project.people });
-    } catch (err) {
-      res.status(500).json({ message: 'Server error', error: err.message });
-    }
-  });
-  
-  router.put('/:projectId/people/:personId', async (req, res) => {
-    const { projectId, personId } = req.params;
-    const { role } = req.body;
-  
-    try {
-      const project = await Project.findById(projectId);
-      if (!project) return res.status(404).json({ message: 'Project not found' });
-  
-      const person = project.people.find(p => p.id === parseInt(personId));
-      if (!person) return res.status(404).json({ message: 'Person not found' });
-  
-      person.role = role || person.role;
-      await project.save();
-  
-      res.status(200).json({ message: 'Person updated', person });
-    } catch (err) {
-      res.status(500).json({ message: 'Server error', error: err.message });
-    }
-  });
+  const { projectId } = req.params;
+  const { person } = req.body; // person: { id, name, email, role }
 
-  
+  try {
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    project.people.push(person);
+    await project.save();
+
+    res.status(200).json({ message: 'Person added', people: project.people });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// GET: Get all users assigned to a project
+router.get('/:projectId/people', async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    res.status(200).json({ people: project.people });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+router.delete('/:projectId/people/:personId', async (req, res) => {
+  const { projectId, personId } = req.params;
+
+  try {
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    // Ensure personId is treated as a string to match the frontend
+    project.people = project.people.filter(p => p.id !== personId); // Compare as string
+
+    await project.save();
+
+    res.status(200).json({ message: 'Person removed', people: project.people });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
 module.exports = router;

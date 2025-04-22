@@ -11,6 +11,15 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const router = useRouter();
+  const roles = [
+    'Developer', 'Designer', 'Project Manager', 'Tester', 'Product Owner',
+    'Scrum Master', 'DevOps Engineer', 'UI/UX Designer', 'Frontend Engineer',
+    'Backend Engineer', 'Mobile Developer', 'Data Scientist', 'Business Analyst',
+    'Security Analyst', 'Technical Writer', 'QA Engineer', 'CTO', 'CEO', 'COO',
+    'Admin'
+  ];
+  const [role, setRole] = useState('Developer');
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,28 +39,29 @@ export default function RegisterPage() {
       return;
     }
 
-   try{
-    const response = await fetch(`http://localhost:5000/api/register`,{
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: username,
-        email,
-        password
+    try {
+      const response = await fetch(`http://localhost:5000/api/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: username,
+          email,
+          password,
+          role
+        })
       })
-    })
-    const data = await response.json();
-    if(!response.ok){
-      throw new Error(data.message || 'Registration failed')
-    }
-    toast.success('Account created successfully!');
-    router.push('/login');
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed')
+      }
+      toast.success('Account created successfully!');
+      router.push('/login');
 
-   }catch(err: any){
-    toast.error(err.message)
-   }
+    } catch (err: any) {
+      toast.error(err.message)
+    }
 
     // Later: send to backend
   };
@@ -93,6 +103,24 @@ export default function RegisterPage() {
               placeholder="you@example.com"
             />
           </div>
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+              Select Role
+            </label>
+            <select
+              id="role"
+              required
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm text-black focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            >
+              {roles.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -123,6 +151,7 @@ export default function RegisterPage() {
               placeholder="••••••••"
             />
           </div>
+
 
           <button
             type="submit"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -11,13 +11,6 @@ type User = {
   role: string;
 };
 
-// Mock org users
-const orgUsers: User[] = Array.from({ length: 30 }).map((_, i) => ({
-  id: i + 1,
-  name: `User ${i + 1}`,
-  email: `user${i + 1}@example.com`,
-  role: i % 2 === 0 ? 'Developer' : 'Designer',
-}));
 
 export default function CreateProjectScreen() {
   const router = useRouter();
@@ -29,15 +22,44 @@ export default function CreateProjectScreen() {
   const [search, setSearch] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [visibleUserCount, setVisibleUserCount] = useState(10);
+  const [orgUsers, setOrgUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    async function fetchOrgUsers() {
+      try {
+        const res = await fetch('http://localhost:5000/api/users?page=1&limit=1000');
+        const data = await res.json();
+        if (res.ok) {
+          setOrgUsers(data.users.map((u: any) => ({
+            id: u._id,
+            name: u.name,
+            email: u.email,
+            role: u.role
+          })));
+        } else {
+          toast.error('Failed to load users');
+        }
+      } catch (err) {
+        toast.error('Server error while fetching users');
+      }
+    }
+
+    fetchOrgUsers();
+  }, []);
+
 
   const handleAddUser = (user: User) => {
     if (selectedUsers.find((u) => u.id === user.id)) {
       toast.error('User already added');
       return;
     }
+  
     setSelectedUsers((prev) => [...prev, user]);
+    setOrgUsers((prev) => prev.filter((u) => u.id !== user.id)); //remove from orgUsers
     toast.success(`${user.name} added to the project`);
   };
+  
+  
 
   const filteredUsers = orgUsers.filter(
     (u) =>
@@ -49,7 +71,7 @@ export default function CreateProjectScreen() {
 
   const handleSubmit = async () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-  
+
     const projectData = {
       title,
       description,
@@ -61,16 +83,16 @@ export default function CreateProjectScreen() {
         email: user.email
       }
     };
-  
+
     try {
       const res = await fetch('http://localhost:5000/api/projects/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(projectData),
       });
-  
+
       const data = await res.json();
-  
+
       if (res.ok) {
         toast.success(data.message);
         router.back();
@@ -81,8 +103,8 @@ export default function CreateProjectScreen() {
       toast.error('Failed to create project');
     }
   };
-  
-  
+
+
 
   return (
     <div className="min-h-screen w-full bg-white text-black p-8 space-y-8">

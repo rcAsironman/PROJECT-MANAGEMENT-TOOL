@@ -10,7 +10,7 @@ const taskSchema = new mongoose.Schema({
     enum: ['todo', 'inprogress', 'completed'],
     default: 'todo',
   },
-}, { _id: true }); // ✅ ensure _id is enabled
+}, { _id: true }); //
 
 const projectSchema = new mongoose.Schema({
   title: String,
@@ -19,12 +19,12 @@ const projectSchema = new mongoose.Schema({
   endDate: String,
   people: [
     {
-      id: Number,
+      id: String, // store the _id as string
       name: String,
       email: String,
       role: String,
     }
-  ],
+  ],  
   createdBy: {
     name: String,
     email: String,

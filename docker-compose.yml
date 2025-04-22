@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build: ./frontend
@@ -20,6 +18,8 @@ services:
     environment:
       - PORT=5000
       - MONGO_URI=mongodb://mongo:27017/project-management
+      - EMAIL_USER=psdproject61@gmail.com  # Make sure to set the correct email
+      - EMAIL_PASS=luwprrjooqdmvfhi     # Make sure to set the correct app password
     depends_on:
       - mongo
     networks:

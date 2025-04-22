@@ -3,17 +3,16 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const nodemailer = require('nodemailer');
+const transporter = require("../emailService")
+console.log("Transporter imported successfully");
 
-
-// Temporary store for codes (in-memory)
 const verificationCodes = {};
 
 // REGISTER ROUTE
 router.post('/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body; // include role
 
-  if (!name || !email || !password) {
+  if (!name || !email || !password || !role) {
     return res.status(400).json({ message: 'All fields are required.' });
   }
 
@@ -23,43 +22,59 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists.' });
     }
 
-    const newUser = new User({ name, email, password });
+    const newUser = new User({ name, email, password, role }); // include role in newUser
     await newUser.save();
-    res.status(201).json({ message: 'User registered successfully.' });
+
+    res.status(201).json({
+      message: 'User registered successfully.',
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt
+      }
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error.' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
+
 // Login Route
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-  
-    try {
-      // Check if user exists
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(400).json({ message: 'User not found.' });
-      }
-  
-      // Check password
-      if (user.password !== password) {
-        return res.status(401).json({ message: 'Invalid password.' });
-      }
-  
-      // Login successful
-      res.status(200).json({
-        message: 'Login successful',
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error });
+  const { email, password } = req.body;
+
+  try {
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found.' });
     }
-  });
+
+    // Check password
+    if (user.password !== password) {
+      return res.status(401).json({ message: 'Invalid password.' });
+    }
+
+    // Return full user object (excluding sensitive data like OTP)
+    res.status(200).json({
+      message: 'Login successful',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
   
 
   
@@ -75,16 +90,7 @@ router.post('/login', async (req, res) => {
   
       user.otpCode = otp;
       user.otpExpires = otpExpires;
-      await user.save();
-  
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
-      });
-  
+      await user.save();  
       await transporter.sendMail({
         from: `"Project Admin" <${process.env.EMAIL_USER}>`,
         to: email,
@@ -137,4 +143,6 @@ router.post('/reset-password', async (req, res) => {
   });
   
 
+
+  
 module.exports = router;
