@@ -1,25 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaUserCircle } from 'react-icons/fa'; // Optional: If you want to use an icon for profile picture.
-
-const dummyUser = {
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  role: 'Developer',
-};
 
 export default function SettingsPage() {
   const router = useRouter();
   
-  // Typing the state to accept either a user object or null
-  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(dummyUser);
+  // State to store the logged-in user data
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+
+  useEffect(() => {
+    // Fetch user data from localStorage (or sessionStorage)
+    const loggedInUser = localStorage.getItem('user');
+    if (loggedInUser) {
+      setUser(JSON.parse(loggedInUser));
+    } else {
+      router.push('/login'); // If no user data exists, redirect to login
+    }
+  }, []);
 
   const handleLogout = () => {
-    // Logic to handle logout (e.g., clearing session, tokens, etc.)
-    setUser(null);  // Clear user data
-    router.push('/login');  // Redirect to login page
+    // Remove user data from localStorage (or sessionStorage)
+    localStorage.removeItem('user');
+    setUser(null); // Clear user state
+    router.push('/login'); // Redirect to login page
   };
 
   return (

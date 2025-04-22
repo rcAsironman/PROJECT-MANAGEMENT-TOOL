@@ -8,7 +8,7 @@ const authRoutes = require('./routes/auth');
 const User = require('./models/User');
 const projectRoutes = require('./routes/project');
 const userRoutes = require('./routes/users');
-
+const taskNotificationRouter = require('./routes/task-notification');
 
 dotenv.config();
 
@@ -20,6 +20,7 @@ app.use(express.json());
 app.use('/api', authRoutes); // ADD THIS below middleware
 app.use('/api/projects', projectRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', taskNotificationRouter);
 
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -38,7 +39,8 @@ mongoose.connect(process.env.MONGO_URI, {
             const rootUser = new User({
                 name: rootName,
                 email: rootEmail,
-                password: rootPassword
+                password: rootPassword,
+                role: "Admin"
             });
             await rootUser.save();
             console.log('Root user created');
@@ -80,5 +82,5 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}, email ${process.env.EMAIL_USER}`);
 });

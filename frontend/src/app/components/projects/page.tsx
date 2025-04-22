@@ -63,6 +63,13 @@ export default function ProjectScreen() {
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {
+          projects.length <1 && (
+         <div className='flex flex-1 w-screen h-screen justify-center'>
+           <h1 className='text-gray-400'>No projects yet, click on create new project to create a new project</h1>
+         </div>
+        )
+        }
         {projects.map((project, index) => (
           <div
             key={project._id}
@@ -82,7 +89,7 @@ export default function ProjectScreen() {
       </div>
 
       {/* Load More Button */}
-      {hasMore && (
+      {hasMore && projects.length >5 && (
         <div className="text-center">
           <button
             onClick={() => setPage((prev) => prev + 1)}
