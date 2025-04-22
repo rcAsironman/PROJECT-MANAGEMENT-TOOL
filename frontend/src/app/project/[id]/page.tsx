@@ -194,7 +194,7 @@ export default function ProjectPage() {
           title: newTask,
           description: taskDescription,
           deadline: taskDeadline,
-          assignedTo: assignedTo 
+          assignedTo: assignedTo
         })
       });
 
@@ -352,7 +352,7 @@ export default function ProjectPage() {
     const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24));
 
     if (diffInDays < 2) return 'bg-red-100';       // Due today
-    if (diffInDays <= 2 && diffInDays > 1) return 'bg-yellow-100';  
+    if (diffInDays <= 2 && diffInDays > 1) return 'bg-yellow-100';
     return ''; // white background
   };
 
@@ -392,7 +392,13 @@ export default function ProjectPage() {
                   <button onClick={handleCancelEdit} className="text-xs bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-500">Cancel</button>
                 </>
               ) : (
-                <button onClick={() => handleEditTask(task)} className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">Edit</button>
+                <>
+                  {
+                    task.status !== 'completed' && (
+                      <button onClick={() => handleEditTask(task)} className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">Edit</button>
+                    )
+                  }
+                </>
               )}
             </div>
           </div>
